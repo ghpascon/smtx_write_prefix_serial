@@ -1,0 +1,71 @@
+<div class="bg-white rounded-lg shadow border p-4 mb-4 flex flex-col w-full max-w-md">
+    <h4 class="text-lg font-semibold mb-2">Prefixo de escrita</h4>
+    <div class="flex items-center space-x-2 mb-2">
+        <span class="font-mono text-base text-gray-700">Atual:</span>
+        <span id="current-prefix" class="font-mono text-base text-blue-700">...</span>
+    </div>
+    <form id="prefix-form" class="flex items-center space-x-2">
+        <input type="text" id="new-prefix" name="new-prefix" class="border rounded px-2 py-1 font-mono text-base"
+            placeholder="Novo prefixo" required />
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">Alterar</button>
+    </form>
+    <div id="prefix-msg" class="mt-2 text-sm"></div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const prefixUrl = "{{ url_for('get_write_prefix') }}";
+        // Função para montar a URL com o prefixo como path param
+        function getSetPrefixUrl(newPrefix) {
+            // Escapa o prefixo para uso seguro na URL
+            return `{{ url_for('set_write_prefix', new_prefix='__REPLACE__') }}`.replace('__REPLACE__', encodeURIComponent(newPrefix));
+        }
+        const currentPrefixEl = document.getElementById('current-prefix');
+        const form = document.getElementById('prefix-form');
+        const input = document.getElementById('new-prefix');
+        const msg = document.getElementById('prefix-msg');
+
+        async function fetchPrefix() {
+            try {
+                const res = await fetch(prefixUrl);
+                if (res.ok) {
+                    const data = await res.json();
+                    currentPrefixEl.textContent = data.write_prefix ?? '-';
+                } else {
+                    currentPrefixEl.textContent = '-';
+                }
+            } catch {
+                currentPrefixEl.textContent = '-';
+            }
+        }
+
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            msg.textContent = '';
+            const newPrefix = input.value.trim();
+            if (!newPrefix) return;
+            try {
+                const url = getSetPrefixUrl(newPrefix);
+                const res = await fetch(url, {
+                    method: 'POST'
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    msg.textContent = data.message || 'Prefixo alterado com sucesso!';
+                    msg.className = 'mt-2 text-green-700 text-sm';
+                    fetchPrefix();
+                } else {
+                    const data = await res.json();
+                    msg.textContent = data.message || 'Erro ao alterar prefixo';
+                    msg.className = 'mt-2 text-red-700 text-sm';
+                }
+            } catch {
+                msg.textContent = 'Erro ao alterar prefixo';
+                msg.className = 'mt-2 text-red-700 text-sm';
+            }
+        });
+
+        fetchPrefix();
+    });
+</script>

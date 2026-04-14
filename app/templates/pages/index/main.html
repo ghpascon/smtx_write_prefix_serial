@@ -5,13 +5,13 @@
     {% include 'includes/_events.html' %} {% include 'includes/_devices.html' %}
   </div>
   <div class="lg:col-span-9">
-    {% if table == "complete" %} 
-    {% include 'includes/_tags_all.html' %} 
-    {% elif table == "gtin" %} 
-    {% include 'includes/_tags_gtin.html' %} 
-    {% else %} 
-    {% include 'includes/_tags.html' %} 
-    {% endif %}
+
+    <div class="flex flex-row gap-4 mb-4">
+      {% include 'includes/_prefix.html' %}
+      {% include 'includes/_serial.html' %}
+    </div>
+    {% include 'includes/_tags_all.html' %}
+
   </div>
 </div>
 {% endblock %}

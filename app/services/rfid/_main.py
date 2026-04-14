@@ -64,7 +64,6 @@ class RfidManager:
 
 	def on_tag(self, name: str, tag_data: dict):
 		new_tag, tag = self.tags.add(tag_data, device=name)
-
 		# NEW TAG
 		if new_tag:
 			logging.info(f'[ TAG ] {name} - Tag Data: {tag}')

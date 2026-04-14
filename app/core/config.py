@@ -56,6 +56,8 @@ class Settings:
 		self.XTRACK_URL: str | None = data.get('XTRACK_URL', None)
 		self.PORT: int = data.get('PORT', 5000)
 
+		self.WRITE_PREFIX: str = data.get('WRITE_PREFIX', 'aaa')
+
 	def get_current_settings(self):
 		return {
 			key: value

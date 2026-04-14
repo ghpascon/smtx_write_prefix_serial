@@ -1,0 +1,67 @@
+<div class="bg-white rounded-lg shadow border p-4 mb-4 flex flex-col w-full max-w-md">
+    <h4 class="text-lg font-semibold mb-2">Serial atual</h4>
+    <div class="flex items-center space-x-2 mb-2">
+        <span class="font-mono text-base text-gray-700">Atual:</span>
+        <span id="current-serial" class="font-mono text-base text-blue-700">...</span>
+    </div>
+    <form id="serial-form" class="flex items-center space-x-2">
+        <input type="number" id="new-serial" name="new-serial" class="border rounded px-2 py-1 font-mono text-base"
+            placeholder="Novo serial" min="0" required />
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">Alterar</button>
+    </form>
+    <div id="serial-msg" class="mt-2 text-sm"></div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const serialUrl = "{{ url_for('get_current_serial') }}";
+        function getSetSerialUrl(newSerial) {
+            return `{{ url_for('set_current_serial', new_serial=0) }}`.replace('0', encodeURIComponent(newSerial));
+        }
+        const currentSerialEl = document.getElementById('current-serial');
+        const form = document.getElementById('serial-form');
+        const input = document.getElementById('new-serial');
+        const msg = document.getElementById('serial-msg');
+
+        async function fetchSerial() {
+            try {
+                const res = await fetch(serialUrl);
+                if (res.ok) {
+                    const data = await res.json();
+                    currentSerialEl.textContent = data.current_serial ?? '-';
+                } else {
+                    currentSerialEl.textContent = '-';
+                }
+            } catch {
+                currentSerialEl.textContent = '-';
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            msg.textContent = '';
+            const newSerial = input.value.trim();
+            if (!newSerial || isNaN(newSerial) || Number(newSerial) < 0) return;
+            try {
+                const url = getSetSerialUrl(newSerial);
+                const res = await fetch(url, { method: 'POST' });
+                if (res.ok) {
+                    const data = await res.json();
+                    msg.textContent = data.message || 'Serial alterado com sucesso!';
+                    msg.className = 'mt-2 text-green-700 text-sm';
+                    fetchSerial();
+                } else {
+                    const data = await res.json();
+                    msg.textContent = data.message || 'Erro ao alterar serial';
+                    msg.className = 'mt-2 text-red-700 text-sm';
+                }
+            } catch {
+                msg.textContent = 'Erro ao alterar serial';
+                msg.className = 'mt-2 text-red-700 text-sm';
+            }
+        });
+
+        fetchSerial();
+        setInterval(fetchSerial, 1000);
+    });
+</script>

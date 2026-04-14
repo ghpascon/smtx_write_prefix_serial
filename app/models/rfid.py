@@ -7,7 +7,7 @@ with proper indexing and relationships.
 
 from sqlalchemy import DateTime, func
 
-from sqlalchemy import Column, Index, Integer, String, Text
+from sqlalchemy import Column, Index, Integer, String, Boolean, Text
 
 from smartx_rfid.models import Base, BaseMixin
 
@@ -31,10 +31,14 @@ class Tag(Base, BaseMixin):
 	# RFID data fields
 	epc = Column(String(24), nullable=False)
 
-	tid = Column(String(24), nullable=True)
+	tid = Column(String(24), nullable=False)
 
 	ant = Column(Integer, nullable=True)
 	rssi = Column(Integer, nullable=True)
+
+	# WRITE
+	target = Column(String(24), nullable=False)
+	write_ok = Column(Boolean, nullable=False)
 
 	# Indexes for optimal query performance
 	__table_args__ = (
