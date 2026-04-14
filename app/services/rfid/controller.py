@@ -39,7 +39,8 @@ class Controller:
 	# [ Tag Events ]
 	def on_new_tag(self, tag: dict):
 		# asyncio.create_task(self.integration.on_tag_integration(tag=tag))
-		tag['target'] = self.get_target()
+		existing_target = self.get_existing_target(tag)
+		tag['target'] = existing_target if existing_target else self.get_target()
 		tag['write_ok'] = False
 		tag['last_ok'] = False
 		self.save_new_tag(tag)
@@ -101,3 +102,10 @@ class Controller:
 			if db_tag:
 				db_tag.write_ok = tag.get('write_ok')
 				db_tag.epc = tag.get('epc')
+
+	def get_existing_target(self, tag: dict):
+		with self.integration.db_manager.get_session() as session:
+			db_tag = session.query(Tag).filter_by(tid=tag.get('tid')).first()
+			if db_tag:
+				return db_tag.target
+			return None
