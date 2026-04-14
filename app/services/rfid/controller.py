@@ -41,8 +41,6 @@ class Controller:
 		# asyncio.create_task(self.integration.on_tag_integration(tag=tag))
 		existing_target = self.get_existing_target(tag)
 		tag['target'] = existing_target if existing_target else self.get_target()
-		tag['write_ok'] = False
-		tag['last_ok'] = False
 		self.save_new_tag(tag)
 		self.write_target(tag)
 
@@ -54,9 +52,10 @@ class Controller:
 		return f'{settings.WRITE_PREFIX}{str(self.serial).zfill(24 - len(settings.WRITE_PREFIX))}'
 
 	def write_target(self, tag: dict):
+		last_ok = tag.get('write_ok', False)
 		tag['write_ok'] = tag.get('epc') == tag.get('target')
 
-		if tag['last_ok'] != tag['write_ok'] and tag['write_ok']:
+		if last_ok != tag['write_ok'] and tag['write_ok']:
 			tag['last_ok'] = tag['write_ok']
 			self.update_write_ok(tag)
 
