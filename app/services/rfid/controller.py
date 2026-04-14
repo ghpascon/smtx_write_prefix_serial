@@ -10,6 +10,7 @@ from .integration import Integration
 import asyncio
 from app.core import settings
 from smartx_rfid.schemas.tag import WriteTagValidator
+from app.models.rfid import Tag
 
 
 class Controller:
@@ -21,11 +22,12 @@ class Controller:
 
 	# [ EVENTS ]
 	def on_event(self, name: str, event_type: str, event_data):
-		asyncio.create_task(
-			self.integration.on_event_integration(
-				name=name, event_type=event_type, event_data=event_data
-			)
-		)
+		# asyncio.create_task(
+		# 	self.integration.on_event_integration(
+		# 		name=name, event_type=event_type, event_data=event_data
+		# 	)
+		# )
+		pass
 
 	# [ Reading Events ]
 	def on_start(self, device: str):
@@ -38,6 +40,9 @@ class Controller:
 	def on_new_tag(self, tag: dict):
 		# asyncio.create_task(self.integration.on_tag_integration(tag=tag))
 		tag['target'] = self.get_target()
+		tag['write_ok'] = False
+		tag['last_ok'] = False
+		self.save_new_tag(tag)
 		self.write_target(tag)
 
 	def on_existing_tag(self, tag: dict):
@@ -49,6 +54,11 @@ class Controller:
 
 	def write_target(self, tag: dict):
 		tag['write_ok'] = tag.get('epc') == tag.get('target')
+
+		if tag['last_ok'] != tag['write_ok'] and tag['write_ok']:
+			tag['last_ok'] = tag['write_ok']
+			self.update_write_ok(tag)
+
 		if not tag['write_ok']:
 			logging.info(f'[ WRITE ] Writing {tag["target"]} to {tag["epc"]}')
 			# Here you would add the actual write command to the RFID device
@@ -61,3 +71,33 @@ class Controller:
 			asyncio.create_task(
 				self.devices.write_epc(device_name=tag.get('device'), write_tag=write_tag)
 			)
+
+	def save_new_tag(self, tag: dict):
+		# Se já existir uma tag com o mesmo tid, atualiza os valores; senão, cria nova
+		with self.integration.db_manager.get_session() as session:
+			db_tag = session.query(Tag).filter_by(tid=tag.get('tid')).first()
+			if db_tag:
+				db_tag.device = tag.get('device')
+				db_tag.epc = tag.get('epc')
+				db_tag.ant = tag.get('ant')
+				db_tag.rssi = tag.get('rssi')
+				db_tag.target = tag.get('target')
+				db_tag.write_ok = tag.get('write_ok')
+			else:
+				new_tag = Tag(
+					device=tag.get('device'),
+					epc=tag.get('epc'),
+					tid=tag.get('tid'),
+					ant=tag.get('ant'),
+					rssi=tag.get('rssi'),
+					target=tag.get('target'),
+					write_ok=tag.get('write_ok'),
+				)
+				session.add(new_tag)
+
+	def update_write_ok(self, tag: dict):
+		with self.integration.db_manager.get_session() as session:
+			db_tag = session.query(Tag).filter_by(tid=tag.get('tid')).first()
+			if db_tag:
+				db_tag.write_ok = tag.get('write_ok')
+				db_tag.epc = tag.get('epc')
