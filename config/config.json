@@ -1,0 +1,13 @@
+{
+    "TITLE": "X-BRIDGE",
+    "LOG_PATH": "/home/gabriel/Desktop/Logs",
+    "STORAGE_DAYS": 7,
+    "OPEN_BROWSER": false,
+    "BEEP": false,
+    "CLEAR_OLD_TAGS_INTERVAL": null,
+    "TAG_PREFIX": "e",
+    "WEBHOOK_URL": null,
+    "DATABASE_URL": null,
+    "XTRACK_URL": null,
+    "PORT": 5000
+}
