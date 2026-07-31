@@ -41,6 +41,7 @@ class Controller:
 		# asyncio.create_task(self.integration.on_tag_integration(tag=tag))
 		existing_target = self.get_existing_target(tag)
 		tag['target'] = existing_target if existing_target else self.get_target()
+		tag['write_ok'] = tag.get('epc') == tag.get('target')
 		self.save_new_tag(tag)
 		self.write_target(tag)
 
